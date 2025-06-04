@@ -1,78 +1,65 @@
 package uy.edu.um;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.opencsv.CSVReader;
+import lombok.Data;
 import uy.edu.um.tad.linkedlist.MyLinkedListImpl;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Scanner;
-
+@Data
 public class CargarDatos {
-    GestionUM gestion= new GestionUM();
-    private void cargarDatosPelis(){
+    GestionUM gestion = new GestionUM();
 
-        try {
-            File file= new File("movies_metadatacsv.csv");
-            Scanner reader= new Scanner(file);
-            reader.nextLine();
-            while(reader.hasNextLine()){
-                String line = reader.nextLine();
-                String[] splitedLine= line.split(",");
-                if(splitedLine.length!=19){
-                    continue;
-                }
-
-                try{
-                    int idPeli = Integer.parseInt(splitedLine[6]);
-                    String titulo = splitedLine[9];
-                    String idiomaOriginal = splitedLine[8];
-
-                    MyLinkedListImpl<String> generos = new MyLinkedListImpl<>();
-                    String generosString = splitedLine[4];
-
-                    // Eliminamos los corchetes exteriores
-                    generosString = generosString.substring(1, generosString.length() - 1);
-
-                    // Sacamos el último '}' (siempre está al final)
-                    if (generosString.endsWith("}")) {
-                        generosString = generosString.substring(0, generosString.length() - 1);
-                    }
-
-                    // Ahora hacemos el split solo por "},"
-                    String[] generosArray = generosString.split("\\},");
-
-                    for (String generoItem : generosArray) {
-                        // Limpiamos espacios y el { que queda al principio
-                        generoItem = generoItem.trim();
-                        if (generoItem.startsWith("{")) {
-                            generoItem = generoItem.substring(1); // eliminamos el primer caracter '{'
-                        }
-
-                        String[] partes = generoItem.split(",");
-                        for (String parte : partes) {
-                            parte = parte.trim(); //Limpiamos espacios
-                            if (parte.startsWith("'name':")) {
-                                String nombreGenero = parte.split(":")[1].trim();
-                                nombreGenero = nombreGenero.replace("'", "").trim();
-                                generos.add(nombreGenero);
-                            }
-                        }
-                    }
-
-                    gestion.getPeliculas().put(idPeli,(new Pelicula(idPeli, titulo, idiomaOriginal, generos)));
-
+    public void cargarDatosPelis() {
+        try (CSVReader reader = new CSVReader(new FileReader("movies_metadata.csv"))) {
+            String[] linea;
+            reader.readNext(); // saltar cabecera
+            while ((linea = reader.readNext()) != null) {
+                String generosRaw = linea[3];
+                List<String> generos = ParserGeneros.extraerNombresGeneros(generosRaw);
+                String idString = linea[5];
+                int id=0;
+                try {
+                    id = Integer.parseInt(idString);
                 } catch (NumberFormatException e) {
-                    System.out.println("Error de parceo");
-                    continue;
+                    System.out.println("ID inválido: " + idString);
+                    continue;  // Salteo la película si el id no es válido
                 }
+                String titulo= linea[8];
+                titulo = titulo.replaceAll("^[\"']|[\"']$", "");
+                String idioma= linea[7];
+                MyLinkedListImpl<String> generosPelicula= new MyLinkedListImpl<>();
+                for(String genero: generos){
+                    generosPelicula.add(genero);
+                }
+                Pelicula pelicula= new Pelicula(id,titulo,idioma,generosPelicula);
+                gestion.getPeliculas().put(id,pelicula);
 
             }
-
-
-        }catch (FileNotFoundException ex){
-            System.out.println("Error de parceo");
-
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+    }
 
+    public static class ParserGeneros {
 
+        public static List<String> extraerNombresGeneros(String data) {
+            // Este es el regex corregido: busca 'name': 'valor'
+            Pattern pattern = Pattern.compile("'name':\\s*'([^']*)'");
+            Matcher matcher = pattern.matcher(data);
+
+            List<String> nombres = new ArrayList<>();
+
+            while (matcher.find()) {
+                nombres.add(matcher.group(1));
+            }
+
+            return nombres;
+        }
     }
 }
