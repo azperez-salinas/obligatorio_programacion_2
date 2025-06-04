@@ -1,5 +1,7 @@
 package uy.edu.um;
 
+import uy.edu.um.tad.linkedlist.MyList;
+
 import java.util.Scanner;
 
 public class Main {
@@ -23,7 +25,13 @@ public class Main {
 
             switch (opcion){
                 case 1:
-                    //Carga de datos
+                    CargarDatos cargarDatos=new CargarDatos();
+                    cargarDatos.cargarDatosPelis();
+                    cargarDatos.cargarDatosCalificaciones();
+                    MyList peliculas= cargarDatos.gestion.getPeliculas().values();
+                    for(int i=0; i< peliculas.size();i++){
+                        System.out.println(peliculas.get(i).toString());
+                    }
                     break;
                 case 2:
                     menuConsultas.mostrarMenu();

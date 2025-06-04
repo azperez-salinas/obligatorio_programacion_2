@@ -1,9 +1,13 @@
 package uy.edu.um;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,7 +18,47 @@ import uy.edu.um.tad.linkedlist.MyLinkedListImpl;
 @Data
 public class CargarDatos {
     GestionUM gestion = new GestionUM();
+    public void cargarDatosCalificaciones() {
+        try {
+            File file = new File("ratings_1mm.csv");
+            Scanner scanner = new Scanner(file);
+            scanner.nextLine();
 
+            while (scanner.hasNextLine()) {
+                String linea = scanner.nextLine();
+                String[] partes = linea.split(",");
+
+                if (partes.length != 4) {
+                    System.out.println("Línea inválida");
+                    continue;
+                }
+
+                try {
+                    int userId = Integer.parseInt(partes[0].trim());
+                    int movieId = Integer.parseInt(partes[1].trim());
+                    double rating = Double.parseDouble(partes[2].trim());
+                    long timestampSeconds = Long.parseLong(partes[3].trim());
+                    Timestamp timestamp = new Timestamp(timestampSeconds * 1000);
+
+
+                    if (!gestion.getPeliculas().contains(movieId)) {
+                        continue;
+                    }
+
+                    Calificacion calificacion = new Calificacion(userId, movieId, rating, timestamp);
+                    gestion.getPeliculas().get(movieId).getCalificaciones().add(calificacion);
+
+                } catch (NumberFormatException e) {
+                    System.out.println("Error de parseo en la línea: " + linea);
+                }
+            }
+
+            scanner.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
     public void cargarDatosPelis() {
         try (CSVReader reader = new CSVReader(new FileReader("movies_metadata.csv"))) {
             String[] linea;
