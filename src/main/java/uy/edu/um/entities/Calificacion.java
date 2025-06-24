@@ -1,4 +1,4 @@
-package uy.edu.um;
+package uy.edu.um.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,8 +8,8 @@ import java.sql.Timestamp;
 @Data
 @AllArgsConstructor
 public class Calificacion {
-    private int idUsuario;
-    private int idPelicula;
+    private String idUsuario;
+    private String idPelicula;
     private Double calificacion;
     Timestamp tiempo;
 }
