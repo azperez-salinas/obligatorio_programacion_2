@@ -18,33 +18,13 @@ public class MenuConsultas {
             cargarDatos.cargarDatosPelis();
             cargarDatos.cargarDatosCalificaciones();
             cargarDatos.cargarDatosCreditos();
-
-
-            MyList<Saga> sagas = cargarDatos.getGestion().getSagas().values();
-            MyList<Pelicula> peliculas = cargarDatos.getGestion().getPeliculas().values();
-            System.out.println("cantidad sagas ," +sagas.size()); //BUENA CANTIDAD DE SAGAS
-            System.out.println("cantidad peliculas ," +peliculas.size()); //BUENA CANTIDAD DE PELIUCLAS
-            //System.out.println(cargarDatos.gestion.getSagas().get("1241").toString()); //BIEN CARGADAS LAS SAGAS
-//        for(int i=0; i< peliculas.size();i++)
-//            if(peliculas.get(i).calificacionMedia()!=0)
-//                System.out.println(peliculas.get(i).toString());
-            System.out.println("cantidad usuarios ,"+ cargarDatos.gestion.getUsuarios().size());
-            System.out.println("cantidad directores ,"+ cargarDatos.gestion.getDirectores().size());
-            System.out.println("cantidad actores ,"+ cargarDatos.gestion.getActores().size());
             datosCargados=true;
-            //MyLinkedListImpl<String> generosPeliculaUno = cargarDatos.gestion.getPeliculas().get("862").getGeneros();
-//                    for(int i=0; i< generosPeliculaUno.size(); i++){
-//                        System.out.println(generosPeliculaUno.get(i));
-//                    } // BIEN CARGADOS LOS GENEROS
         }else {
             System.out.println("Ya se cargaron los datos");
         }
-
     }
-
     public void mostrarMenu() {
         int opcion;
-
         do {
             System.out.println(
                     "\n╔══════════════════════════════════════════════════════════════════════╗" +
@@ -93,6 +73,7 @@ public class MenuConsultas {
 
     }
     private void top5PeliculasPorIdioma( ){
+        long inicio = System.nanoTime();
         System.out.println("evaluando");
         Pelicula.compararPorCantidad=true;
         MyHeap<Pelicula> topPeliculasIngles = new MyHeapImpl<>(true);
@@ -145,6 +126,7 @@ public class MenuConsultas {
                     topPeliculasPortugues.insert(peli);
                 }
             }
+
         }
 
 
@@ -172,10 +154,14 @@ public class MenuConsultas {
             Pelicula peli = topPeliculasPortugues.delete();
             System.out.println("Idioma: portuges, "+"Cantidad de calificaciones: "+peli.getCalificaciones().size()+" "+peli.toString());
         }
+        long fin = System.nanoTime();
+        long duracion = fin - inicio;
+        System.out.println("Tiempo de ejecución: " + (duracion / 1_000_000.0) + " ms");
 
     }
 
     private void top10PeliculasPorCalificacion( ){
+        long inicio = System.nanoTime();
         System.out.println("Evaluando top 10...");
         MyHeap<Pelicula> topPeliculas = new MyHeapImpl<>(true);
         Pelicula.compararPorCantidad=false;
@@ -189,11 +175,16 @@ public class MenuConsultas {
                 topPeliculas.insert(peli);
             }
         }
-        for(int i=0; i<10; i++)
-            System.out.println(10-i +": "+topPeliculas.delete());
+        for(int i=0; i<10; i++) {
+            System.out.println(10 - i + ": " + topPeliculas.delete());
+        }
+        long fin = System.nanoTime();
+        long duracion = fin - inicio;
+        System.out.println("Tiempo de ejecución: " + (duracion / 1_000_000.0) + " ms");
     }
 
     private void top5ColeccionesMasIngresos( ){
+        long inicio = System.nanoTime();
         System.out.println("evaluando");
         MyHeap<Saga> sagasTop= new MyHeapImpl<>(true);
         MyList<Saga> sagas = cargarDatos.gestion.getSagas().values();
@@ -209,9 +200,13 @@ public class MenuConsultas {
             Saga saga = sagasTop.delete();
             System.out.println("Recaudación: USD"+saga.recaudacion()+", nombre:"+saga.getNombre());
         }
+        long fin = System.nanoTime();
+        long duracion = fin - inicio;
+        System.out.println("Tiempo de ejecución: " + (duracion / 1_000_000.0) + " ms");
     }
 
     private void top10Directores( ){
+        long inicio = System.nanoTime();
         System.out.println("evaluando");
 
         MyList<Director> directores = cargarDatos.gestion.getDirectores().values();
@@ -242,9 +237,13 @@ public class MenuConsultas {
                     + ", nombre: " + d.getNombre()
                     + ", Cant. pelis: " + d.getCantidadPeliculas()+ ", Cant. calif: " + d.getCantidadCalificaciones());
         }
+        long fin = System.nanoTime();
+        long duracion = fin - inicio;
+        System.out.println("Tiempo de ejecución: " + (duracion / 1_000_000.0) + " ms");
     }
 
     private void actorPorCadaAño( ) {
+        long inicio = System.nanoTime();
         MyHashImpl<String, int[]> conteo = new MyHashImpl<>();  // actorId → int[13]
         int[] maxCantMes = new int[13];                         // máximo por mes
         String[] mejorActor = new String[13];                   // actorId con más calificaciones
@@ -294,48 +293,86 @@ public class MenuConsultas {
                 System.out.printf("Mes %2d → ningún actor calificado%n", mes);
             }
         }
+        long fin = System.nanoTime();
+        long duracion = fin - inicio;
+        System.out.println("Tiempo de ejecución: " + (duracion / 1_000_000.0) + " ms");
 
     }
 
     private void usuariosMasCalificadores( ){
+        long inicio = System.nanoTime();
         System.out.println("evaluando");
-        MyHash<String,Integer> generoMasCalificado= new MyHashImpl<>();
+        MyHashImpl<String, Integer> generoCantidad = new MyHashImpl<>();
+        MyHashImpl<String, MyHashImpl<String, Integer>> generoUsuarios = new MyHashImpl<>();
 
-        for(int i=0; i< cargarDatos.gestion.getPeliculas().size();i++){
-            Pelicula peli = cargarDatos.gestion.getPeliculas().values().get(i);
-            int calificacionesActuales= peli.getCalificaciones().size();
-            for(int j=0; j< peli.getGeneros().size();j++){
-                if(generoMasCalificado.get(peli.getGeneros().get(j).toLowerCase())==null){
-                    generoMasCalificado.put(peli.getGeneros().get(j).toLowerCase(),calificacionesActuales);
-                }else {
-                    int valorAvtual = generoMasCalificado.get(peli.getGeneros().get(j).toLowerCase());
-                    generoMasCalificado.put(peli.getGeneros().get(j).toLowerCase(),calificacionesActuales+valorAvtual);
+        MyList<String> clavesPeliculas = cargarDatos.gestion.getPeliculas().keys();
+
+        for (int i = 0; i < clavesPeliculas.size(); i++) {
+            Pelicula pelicula = cargarDatos.gestion.getPeliculas().get(clavesPeliculas.get(i));
+            MyList<Calificacion> calificaciones = pelicula.getCalificaciones();
+            MyList<String> generos = pelicula.getGeneros();
+
+            for (int g = 0; g < generos.size(); g++) {
+                String genero = generos.get(g);
+
+                for (int c = 0; c < calificaciones.size(); c++) {
+                    Calificacion cal = calificaciones.get(c);
+                    String userId = cal.getIdUsuario();
+
+                    // Total calificaciones por género
+                    Integer count = generoCantidad.get(genero);
+                    generoCantidad.put(genero, count == null ? 1 : count + 1);
+
+                    // Calificaciones por usuario en ese género
+                    MyHashImpl<String, Integer> usuariosPorGenero = generoUsuarios.get(genero);
+                    if (usuariosPorGenero == null) {
+                        usuariosPorGenero = new MyHashImpl<>();
+                        generoUsuarios.put(genero, usuariosPorGenero);
+                    }
+
+                    Integer userCount = usuariosPorGenero.get(userId);
+                    usuariosPorGenero.put(userId, userCount == null ? 1 : userCount + 1);
                 }
             }
         }
-        MyList<String>  generos = generoMasCalificado.keys();
-        MyHeap<Genero> generosOrdenados = new MyHeapImpl<>(true);
-        for (int i = 0; i < generos.size(); i++) {
-            String genero = generos.get(i);
-            int total = generoMasCalificado.get(genero);
-            Genero g= new Genero( total,genero);
-            if(generosOrdenados.size()<10){
-                generosOrdenados.insert(g);
-            }
-            else{
-                if(generosOrdenados.get().getCalificaciones()<g.getCalificaciones()){
-                    generosOrdenados.delete();
-                    generosOrdenados.insert(g);
+
+
+        MyHeap<GeneroCantidad> heap = new MyHeapImpl<>(true);
+
+        MyList<String> generosLista = generoCantidad.keys();
+        for (int i = 0; i < generosLista.size(); i++) {
+            String genero = generosLista.get(i);
+            int cant = generoCantidad.get(genero);
+            heap.insert(new GeneroCantidad(genero, cant));
+        }
+
+        // Mostrar resultados
+        int top = Math.min(10, heap.size());
+
+        for (int i = 0; i < top; i++) {
+            GeneroCantidad topGenero = heap.delete();
+            String genero = topGenero.getGenero();
+
+            MyHashImpl<String, Integer> usuarios = generoUsuarios.get(genero);
+            MyList<String> userIds = usuarios.keys();
+
+            String mejorUsuarioId = null;
+            int max = 0;
+
+            for (int j = 0; j < userIds.size(); j++) {
+                String uid = userIds.get(j);
+                int cantidad = usuarios.get(uid);
+                if (cantidad > max) {
+                    max = cantidad;
+                    mejorUsuarioId = uid;
                 }
             }
+            System.out.println("Genero: "+genero+" | Usuario Id: "+ mejorUsuarioId+ " | Cantidad de calificaciones: "+max);
         }
-        MyList<Genero> generos2= new MyLinkedListImpl<>();
-        System.out.println("Top 10 géneros con más calificaciones:");
-        for(int i=0 ; i<10;i++){
-            Genero g= generosOrdenados.delete();
-            generos2.add(g);
-            System.out.println("El genero :"+g.getGenero()+" tiene: "+g.getCalificaciones());
-        }
+        long fin = System.nanoTime();
+        long duracion = fin - inicio;
+        System.out.println("Tiempo de ejecución: " + (duracion / 1_000_000.0) + " ms");
+
 
 
     }
